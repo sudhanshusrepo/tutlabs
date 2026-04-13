@@ -4,7 +4,6 @@ import React from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LogIn, Clock } from "lucide-react";
-import { useCountdown } from "@/lib/hooks"; // I need to implement a simple countdown helper or parse it directly natively. I will use a native effect for time.
 
 interface RateLimitModalProps {
   open: boolean;

@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { Plus, Trash2 } from "lucide-react";
 
-import { ResumeSchema, ResumeData, SkillItem } from "@/types/resume";
+import { ResumeSchema, ResumeData } from "@/types/resume";
 import { useResume } from "@/lib/resumeContext";
 
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 export function ResumeForm() {
   const { data, dispatch, isHydrated } = useResume();

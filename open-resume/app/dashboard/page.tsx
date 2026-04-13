@@ -40,7 +40,7 @@ export default async function DashboardPage() {
       {(!resumes || resumes.length === 0) ? (
         <div className="text-center py-20 bg-muted/20 rounded-xl border border-dashed flex flex-col items-center">
           <h2 className="text-xl font-medium mb-2">No resumes found</h2>
-          <p className="text-muted-foreground mb-6 max-w-md">You haven't saved any resumes to your account yet. Let's create your first impressive layout!</p>
+          <p className="text-muted-foreground mb-6 max-w-md">You haven&apos;t saved any resumes to your account yet. Let&apos;s create your first impressive layout!</p>
           <Link href="/builder">
             <Button variant="outline">Start Building Your Next Job</Button>
           </Link>
