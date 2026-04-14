@@ -52,15 +52,13 @@ export function HeaderProfile() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full border border-border">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
-            <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-        </Button>
+      <DropdownMenuTrigger className="relative h-8 w-8 rounded-full border border-border bg-transparent hover:bg-accent flex items-center justify-center outline-none">
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
+          <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+        </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.user_metadata?.full_name || "Account"}</p>
@@ -68,7 +66,7 @@ export function HeaderProfile() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem>
           <Link href="/dashboard" className="cursor-pointer w-full flex items-center">
             <LayoutDashboard className="mr-2 h-4 w-4" />
             <span>Dashboard</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
@@ -46,10 +46,11 @@ export function AuthModal({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <>
+      <span onClick={() => setOpen(true)} style={{ display: 'contents' }}>
         {children}
-      </DialogTrigger>
+      </span>
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Sign in to OpenResume</DialogTitle>
@@ -94,5 +95,6 @@ export function AuthModal({ children }: { children: React.ReactNode }) {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

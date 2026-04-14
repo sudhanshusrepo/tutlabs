@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+// Next.js 15+: params is now a Promise
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = createClient();
+  const { id } = await params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -15,8 +17,8 @@ export async function GET(
   const { data, error } = await supabase
     .from("resumes")
     .select("*")
-    .eq("id", params.id)
-    .eq("user_id", user.id) // Ensure strict manual ownership verify
+    .eq("id", id)
+    .eq("user_id", user.id)
     .single();
 
   if (error || !data) {
@@ -28,9 +30,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = createClient();
+  const { id } = await params;
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -40,7 +43,7 @@ export async function DELETE(
   const { error } = await supabase
     .from("resumes")
     .delete()
-    .eq("id", params.id)
+    .eq("id", id)
     .eq("user_id", user.id);
 
   if (error) {

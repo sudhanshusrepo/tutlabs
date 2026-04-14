@@ -21,17 +21,16 @@ export async function generatePDF(elementId: string): Promise<Blob> {
 
   // Optimized configuration for A4, high resolution canvas scaling, and proper multi-page behavior.
   const opt = {
-    margin:       0, // Real-time preview holds its own internal padding equivalent to the resume
+    margin:       0,
     filename:     'resume.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
+    image:        { type: 'jpeg' as const, quality: 0.98 },
     html2canvas:  { 
-      scale: 2,           // 2x scale for Retina crispness 
-      useCORS: true,      // Ensures foreign images (e.g. portfolio screenshots) don't crash the canvas
+      scale: 2,
+      useCORS: true,
       logging: false,
     },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    // Page break mapping avoids splitting DOM nodes halfway across pages
-    pagebreak:    { mode: ['css', 'avoid-all'] }
+    jsPDF:        { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+    pagebreak:    { mode: ['css', 'avoid-all'] as const }
   };
 
   // Process the element and output standard Blob

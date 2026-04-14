@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const salt = process.env.IP_SALT || 'temp_salt_for_local_development_fallback';
 
