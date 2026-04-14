@@ -1,20 +1,72 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, KeyboardEvent } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, GraduationCap, Code2, FolderGit2 } from "lucide-react";
 
 import { ResumeSchema, ResumeData } from "@/types/resume";
 import { useResume } from "@/lib/resumeContext";
-
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// ─── Section Header ───────────────────────────────────────────────────────────
+interface SectionHeaderProps {
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  action?: React.ReactNode;
+}
+function SectionHeader({ icon, iconBg, title, action }: SectionHeaderProps) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+          {icon}
+        </div>
+        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+// ─── Add Button ───────────────────────────────────────────────────────────────
+interface AddButtonProps {
+  label: string;
+  color: string;
+  onClick: () => void;
+}
+function AddButton({ label, color, onClick }: AddButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border transition-all hover:opacity-90 active:scale-95 ${color}`}
+    >
+      <Plus className="w-3.5 h-3.5" />
+      {label}
+    </button>
+  );
+}
+
+// ─── Section Card ─────────────────────────────────────────────────────────────
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-[#f2f2f7] rounded-2xl p-5 mb-4">
+      {children}
+    </div>
+  );
+}
+
+// ─── Field styles ─────────────────────────────────────────────────────────────
+const inputClass =
+  "w-full bg-white/80 border-0 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 shadow-none focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition";
+const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5";
+
+// ─── Main Form ────────────────────────────────────────────────────────────────
 export function ResumeForm() {
   const { data, dispatch, isHydrated } = useResume();
 
@@ -24,273 +76,246 @@ export function ResumeForm() {
     mode: "onBlur",
   });
 
-  // Reset form when hydrated from localStorage
   useEffect(() => {
-    if (isHydrated) {
-      form.reset(data);
-    }
+    if (isHydrated) form.reset(data);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated]);
 
-  // Sync to global context on every change for the live preview
   useEffect(() => {
     const subscription = form.watch(() => {
-      // Use getValues() to fetch the full object, preventing partial deep undefined errors
       const currentValues = form.getValues();
-      dispatch({ 
-        type: "SET_ALL_DATA", 
-        payload: { ...data, ...currentValues } as ResumeData 
-      });
+      dispatch({ type: "SET_ALL_DATA", payload: { ...data, ...currentValues } as ResumeData });
     });
     return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.watch, dispatch, form, data]);
 
-  const {
-    register,
-    control,
-    formState: { errors },
-  } = form;
+  const { register, control } = form;
 
-  const expArray = useFieldArray({
-    control,
-    name: "experience",
-  });
+  const expArray = useFieldArray({ control, name: "experience" });
+  const eduArray = useFieldArray({ control, name: "education" });
+  const skillsArray = useFieldArray({ control, name: "skills" });
 
-  const eduArray = useFieldArray({
-    control,
-    name: "education",
-  });
-
-  const skillsArray = useFieldArray({
-    control,
-    name: "skills",
-  });
+  // Skill tag input state
+  const [skillInput, setSkillInput] = useState("");
+  const handleSkillKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Enter" || e.key === ",") && skillInput.trim()) {
+      e.preventDefault();
+      skillsArray.append({ id: uuidv4(), name: skillInput.trim() });
+      setSkillInput("");
+    }
+  };
 
   if (!isHydrated) {
-    return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading saved data...</div>;
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-[#f2f2f7] rounded-2xl p-5 animate-pulse">
+            <div className="h-6 bg-gray-300 rounded w-40 mb-4" />
+            <div className="h-10 bg-gray-200 rounded-xl mb-3" />
+            <div className="h-10 bg-gray-200 rounded-xl" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   return (
-    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-      {/* PERSONAL INFO */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="John Doe" {...register("personalInfo.name")} />
-              {errors.personalInfo?.name && <p className="text-sm text-red-500">{errors.personalInfo.name.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john@example.com" {...register("personalInfo.email")} />
-              {errors.personalInfo?.email && <p className="text-sm text-red-500">{errors.personalInfo.email.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" placeholder="+1 (555) 000-0000" {...register("personalInfo.phone")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" placeholder="City, State" {...register("personalInfo.location")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="linkedin">LinkedIn URL</Label>
-              <Input id="linkedin" type="url" placeholder="https://linkedin.com/in/..." {...register("personalInfo.linkedin")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="portfolio">Portfolio URL</Label>
-              <Input id="portfolio" type="url" placeholder="https://..." {...register("personalInfo.portfolio")} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <form className="space-y-2 pb-10" onSubmit={(e) => e.preventDefault()}>
 
-      {/* PROFESSIONAL SUMMARY */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Professional Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="summary">Summary</Label>
-            <Textarea
-              id="summary"
-              placeholder="A brief overview of your professional background and goals..."
-              className="min-h-[100px]"
+      {/* ── PERSONAL INFORMATION ── */}
+      <SectionCard>
+        <SectionHeader
+          icon={<User className="w-5 h-5 text-blue-600" />}
+          iconBg="bg-blue-100"
+          title="Personal Information"
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Full Name</label>
+            <input className={inputClass} placeholder="Sudhanshu Singh" {...register("personalInfo.name")} />
+          </div>
+          <div>
+            <label className={labelClass}>Email</label>
+            <input className={inputClass} type="email" placeholder="john@example.com" {...register("personalInfo.email")} />
+          </div>
+          <div>
+            <label className={labelClass}>Phone</label>
+            <input className={inputClass} placeholder="+1 234 567 890" {...register("personalInfo.phone")} />
+          </div>
+          <div>
+            <label className={labelClass}>Location</label>
+            <input className={inputClass} placeholder="New York, NY" {...register("personalInfo.location")} />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Website / LinkedIn</label>
+            <input className={inputClass} placeholder="linkedin.com/in/johndoe" {...register("personalInfo.linkedin")} />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Portfolio URL</label>
+            <input className={inputClass} placeholder="https://yourportfolio.com" {...register("personalInfo.portfolio")} />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass}>Professional Summary</label>
+            <textarea
+              className={`${inputClass} min-h-[96px] resize-y`}
+              placeholder="Briefly describe your background and goals..."
               {...register("summary")}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
-      {/* EXPERIENCE */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Experience</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      {/* ── EXPERIENCE ── */}
+      <SectionCard>
+        <SectionHeader
+          icon={<Briefcase className="w-5 h-5 text-orange-500" />}
+          iconBg="bg-orange-100"
+          title="Experience"
+          action={
+            <AddButton
+              label="Add Experience"
+              color="text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100"
+              onClick={() => expArray.append({ id: uuidv4(), company: "", role: "", startDate: "", endDate: "", description: "" })}
+            />
+          }
+        />
+        <div className="space-y-4">
           {expArray.fields.map((field, index) => (
-            <div key={field.id} className="p-4 border rounded-md relative space-y-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+            <div key={field.id} className="bg-white/80 rounded-xl p-4 space-y-3 relative">
+              <button
+                type="button"
                 onClick={() => expArray.remove(index)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition"
               >
                 <Trash2 className="w-4 h-4" />
-              </Button>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Company *</Label>
-                  <Input {...register(`experience.${index}.company` as const)} placeholder="Company Name" />
-                  {errors.experience?.[index]?.company && (
-                    <p className="text-sm text-red-500">{errors.experience[index]?.company?.message}</p>
-                  )}
+              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>Company</label>
+                  <input className={inputClass} placeholder="Company Name" {...register(`experience.${index}.company`)} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Role *</Label>
-                  <Input {...register(`experience.${index}.role` as const)} placeholder="Job Title" />
-                  {errors.experience?.[index]?.role && (
-                    <p className="text-sm text-red-500">{errors.experience[index]?.role?.message}</p>
-                  )}
+                <div>
+                  <label className={labelClass}>Role</label>
+                  <input className={inputClass} placeholder="Job Title" {...register(`experience.${index}.role`)} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Start Date *</Label>
-                  <Input {...register(`experience.${index}.startDate` as const)} placeholder="MM/YYYY" />
-                  {errors.experience?.[index]?.startDate && (
-                    <p className="text-sm text-red-500">{errors.experience[index]?.startDate?.message}</p>
-                  )}
+                <div>
+                  <label className={labelClass}>Start Date</label>
+                  <input className={inputClass} placeholder="MM/YYYY" {...register(`experience.${index}.startDate`)} />
                 </div>
-                <div className="space-y-2">
-                  <Label>End Date</Label>
-                  <Input {...register(`experience.${index}.endDate` as const)} placeholder="MM/YYYY or Present" />
+                <div>
+                  <label className={labelClass}>End Date</label>
+                  <input className={inputClass} placeholder="MM/YYYY or Present" {...register(`experience.${index}.endDate`)} />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  {...register(`experience.${index}.description` as const)}
+              <div>
+                <label className={labelClass}>Description</label>
+                <textarea
+                  className={`${inputClass} min-h-[80px] resize-y`}
                   placeholder="Describe your achievements and responsibilities..."
+                  {...register(`experience.${index}.description`)}
                 />
               </div>
             </div>
           ))}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() =>
-              expArray.append({ id: uuidv4(), company: "", role: "", startDate: "", endDate: "", description: "" })
-            }
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add Experience
-          </Button>
-        </CardContent>
-      </Card>
+          {expArray.fields.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-3">No experience added yet.</p>
+          )}
+        </div>
+      </SectionCard>
 
-      {/* EDUCATION */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Education</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      {/* ── EDUCATION ── */}
+      <SectionCard>
+        <SectionHeader
+          icon={<GraduationCap className="w-5 h-5 text-blue-500" />}
+          iconBg="bg-blue-100"
+          title="Education"
+          action={
+            <AddButton
+              label="Add Education"
+              color="text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100"
+              onClick={() => eduArray.append({ id: uuidv4(), school: "", degree: "", startDate: "", endDate: "", gpa: "" })}
+            />
+          }
+        />
+        <div className="space-y-4">
           {eduArray.fields.map((field, index) => (
-            <div key={field.id} className="p-4 border rounded-md relative space-y-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+            <div key={field.id} className="bg-white/80 rounded-xl p-4 space-y-3 relative">
+              <button
+                type="button"
                 onClick={() => eduArray.remove(index)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition"
               >
                 <Trash2 className="w-4 h-4" />
-              </Button>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>School *</Label>
-                  <Input {...register(`education.${index}.school` as const)} placeholder="University Name" />
-                  {errors.education?.[index]?.school && (
-                    <p className="text-sm text-red-500">{errors.education[index]?.school?.message}</p>
-                  )}
+              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>School</label>
+                  <input className={inputClass} placeholder="University Name" {...register(`education.${index}.school`)} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Degree *</Label>
-                  <Input {...register(`education.${index}.degree` as const)} placeholder="B.S. Computer Science" />
-                  {errors.education?.[index]?.degree && (
-                    <p className="text-sm text-red-500">{errors.education[index]?.degree?.message}</p>
-                  )}
+                <div>
+                  <label className={labelClass}>Degree</label>
+                  <input className={inputClass} placeholder="B.S. Computer Science" {...register(`education.${index}.degree`)} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Start Date *</Label>
-                  <Input {...register(`education.${index}.startDate` as const)} placeholder="YYYY" />
-                  {errors.education?.[index]?.startDate && (
-                    <p className="text-sm text-red-500">{errors.education[index]?.startDate?.message}</p>
-                  )}
+                <div>
+                  <label className={labelClass}>Start Date</label>
+                  <input className={inputClass} placeholder="YYYY" {...register(`education.${index}.startDate`)} />
                 </div>
-                <div className="space-y-2">
-                  <Label>End Date</Label>
-                  <Input {...register(`education.${index}.endDate` as const)} placeholder="YYYY" />
+                <div>
+                  <label className={labelClass}>End Date</label>
+                  <input className={inputClass} placeholder="YYYY" {...register(`education.${index}.endDate`)} />
                 </div>
-                <div className="space-y-2">
-                  <Label>GPA</Label>
-                  <Input {...register(`education.${index}.gpa` as const)} placeholder="3.8/4.0" />
+                <div className="col-span-2">
+                  <label className={labelClass}>GPA (optional)</label>
+                  <input className={inputClass} placeholder="3.8 / 4.0" {...register(`education.${index}.gpa`)} />
                 </div>
               </div>
             </div>
           ))}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => eduArray.append({ id: uuidv4(), school: "", degree: "", startDate: "", endDate: "", gpa: "" })}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add Education
-          </Button>
-        </CardContent>
-      </Card>
+          {eduArray.fields.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-3">No education added yet.</p>
+          )}
+        </div>
+      </SectionCard>
 
-      {/* SKILLS */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Skills</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {skillsArray.fields.map((field, index) => (
-              <div key={field.id} className="flex items-center bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-sm">
-                <Input
-                  className="bg-transparent border-none h-6 p-0 w-24 focus-visible:ring-0 shadow-none text-sm"
-                  {...register(`skills.${index}.name` as const)}
-                />
-                <button
-                  type="button"
-                  onClick={() => skillsArray.remove(index)}
-                  className="ml-2 text-muted-foreground hover:text-foreground"
+      {/* ── SKILLS ── */}
+      <SectionCard>
+        <SectionHeader
+          icon={<Code2 className="w-5 h-5 text-teal-600" />}
+          iconBg="bg-teal-100"
+          title="Skills"
+        />
+        <div>
+          <label className={labelClass}>Add Skill (Press Enter)</label>
+          <input
+            className={inputClass}
+            placeholder="e.g. React, TypeScript, Project Management"
+            value={skillInput}
+            onChange={(e) => setSkillInput(e.target.value)}
+            onKeyDown={handleSkillKeyDown}
+          />
+          {skillsArray.fields.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {skillsArray.fields.map((field, index) => (
+                <span
+                  key={field.id}
+                  className="inline-flex items-center gap-1.5 bg-white/80 text-gray-700 text-sm font-medium px-3 py-1 rounded-full border border-gray-200"
                 >
-                  &times;
-                </button>
-              </div>
-            ))}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => skillsArray.append({ id: uuidv4(), name: "New Skill" })}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Add Skill
-          </Button>
-        </CardContent>
-      </Card>
-      
-      {/* Note: The download generation is a placeholder for Day 3 requirement */}
-      <div className="hidden">
-        {/* Forces error indicators to re-render properly */}
-        {Object.keys(errors).length > 0 && <span id="form-has-errors"></span>}
-      </div>
+                  {(field as any).name}
+                  <button
+                    type="button"
+                    onClick={() => skillsArray.remove(index)}
+                    className="text-gray-400 hover:text-red-500 transition ml-0.5"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </SectionCard>
+
     </form>
   );
 }

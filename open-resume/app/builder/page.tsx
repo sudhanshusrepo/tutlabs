@@ -122,9 +122,8 @@ export default function BuilderPage() {
         
         <main className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
           {/* LEFT PANE - FORM */}
-          <div className="h-full overflow-y-auto border-r bg-background p-6 lg:p-8 print:hidden">
+          <div className="h-full overflow-y-auto border-r bg-[#e5e5ea] p-4 lg:p-6 print:hidden">
             <div className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-bold mb-6">Build Your Resume</h2>
               <ResumeForm />
             </div>
           </div>
