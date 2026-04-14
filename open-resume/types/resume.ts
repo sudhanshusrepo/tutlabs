@@ -89,18 +89,22 @@ export const EducationSchema = z.object({
 
   startDate: z
     .string()
-    .min(1, "Start date is required")
+    .min(1, "Start year is required")
     .refine(
-      (val) => mmYYYYRegex.test(val),
-      "Use MM/YYYY format (e.g. 06/2020)"
+      (val) => /^\d{4}$/.test(val) && parseInt(val) >= 1900 && parseInt(val) <= 2100,
+      "Enter a valid 4-digit year (e.g. 2020)"
     ),
 
   endDate: z
     .string()
     .optional()
     .refine(
-      (val) => !val || val === "" || presentOrDate(val),
-      "Use MM/YYYY format or write 'Present'"
+      (val) =>
+        !val ||
+        val === "" ||
+        (val.trim().toLowerCase() === "present") ||
+        (/^\d{4}$/.test(val) && parseInt(val) >= 1900 && parseInt(val) <= 2100),
+      "Enter a valid year (e.g. 2024) or 'Present'"
     ),
 
   gpa: z

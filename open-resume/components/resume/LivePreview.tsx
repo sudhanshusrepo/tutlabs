@@ -3,6 +3,42 @@
 import React from "react";
 import { useResume } from "@/lib/resumeContext";
 
+// ─── Date formatters ──────────────────────────────────────────────────────────
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/** Converts "06/2022" → "Jun 2022", "Present" → "Present", anything else as-is */
+function formatExpDate(date?: string): string {
+  if (!date || date.trim() === "") return "";
+  if (date.trim().toLowerCase() === "present") return "Present";
+  const match = date.match(/^(\d{2})\/(\d{4})$/);
+  if (match) {
+    const month = parseInt(match[1], 10);
+    const year = match[2];
+    const monthName = MONTHS[month - 1] || "";
+    return monthName ? `${monthName} ${year}` : year;
+  }
+  return date; // fallback: show raw
+}
+
+/** Renders an experience date range: "Jun 2022 – Present" */
+function expDateRange(start: string, end?: string): string {
+  const s = formatExpDate(start);
+  const e = formatExpDate(end);
+  if (!s) return "";
+  return e ? `${s} – ${e}` : s;
+}
+
+/** Renders an education year range: "2020 – 2024" or "2020 – Present" */
+function eduDateRange(start: string, end?: string): string {
+  if (!start) return "";
+  const e = end?.trim();
+  if (!e) return start;
+  return `${start} – ${e.toLowerCase() === "present" ? "Present" : e}`;
+}
+
 export function LivePreview() {
   const { data, isHydrated } = useResume();
 
@@ -59,7 +95,7 @@ export function LivePreview() {
                 <div className="flex justify-between items-baseline mb-1">
                   <h3 className="font-bold text-slate-900">{exp.role}</h3>
                   <span className="text-sm font-semibold text-slate-500">
-                    {exp.startDate} {exp.endDate ? `- ${exp.endDate}` : ""}
+                    {expDateRange(exp.startDate, exp.endDate)}
                   </span>
                 </div>
                 <div className="text-sm text-slate-600 font-medium mb-2">{exp.company}</div>
@@ -86,7 +122,7 @@ export function LivePreview() {
                 <div className="flex justify-between items-baseline mb-1">
                   <h3 className="font-bold text-slate-900">{edu.degree}</h3>
                   <span className="text-sm font-semibold text-slate-500">
-                    {edu.startDate} {edu.endDate ? `- ${edu.endDate}` : ""}
+                    {eduDateRange(edu.startDate, edu.endDate)}
                   </span>
                 </div>
                 <div className="text-sm text-slate-600 flex justify-between">

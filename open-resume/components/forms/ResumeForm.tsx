@@ -257,7 +257,7 @@ export function ResumeForm() {
             <input
               className={errors.personalInfo?.email ? inputErrorClass : inputClass}
               type="email"
-              placeholder="you@example.com"
+              placeholder="dhan@example.com"
               {...register("personalInfo.email")}
             />
             <FieldError message={errors.personalInfo?.email?.message} />
@@ -471,28 +471,41 @@ export function ResumeForm() {
                     <FieldError message={err?.degree?.message} />
                   </div>
                   <div>
-                    <label className={labelClass}>Start Date <RequiredMark /></label>
-                    <DateInput
-                      value={watch(`education.${index}.startDate`) || ""}
-                      onChange={(val) =>
-                        setValue(`education.${index}.startDate`, val, { shouldValidate: true })
-                      }
-                      onBlur={() => trigger(`education.${index}.startDate`)}
-                      error={err?.startDate?.message}
+                    <label className={labelClass}>Start Year <RequiredMark /></label>
+                    <input
+                      className={err?.startDate ? inputErrorClass : inputClass}
+                      placeholder="2020"
+                      maxLength={4}
+                      inputMode="numeric"
+                      {...register(`education.${index}.startDate`, {
+                        onChange: (e) => {
+                          const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+                          setValue(`education.${index}.startDate`, digits, { shouldValidate: true });
+                        },
+                      })}
                     />
+                    <FieldError message={err?.startDate?.message} />
                   </div>
                   <div>
-                    <label className={labelClass}>End Date</label>
-                    <DateInput
-                      value={watch(`education.${index}.endDate`) || ""}
-                      onChange={(val) =>
-                        setValue(`education.${index}.endDate`, val, { shouldValidate: true })
-                      }
-                      onBlur={() => trigger(`education.${index}.endDate`)}
-                      error={err?.endDate?.message}
-                      allowPresent
-                      placeholder="MM/YYYY or Present"
+                    <label className={labelClass}>End Year</label>
+                    <input
+                      className={err?.endDate ? inputErrorClass : inputClass}
+                      placeholder="2024 or Present"
+                      maxLength={7}
+                      {...register(`education.${index}.endDate`, {
+                        onChange: (e) => {
+                          const raw = e.target.value;
+                          // Allow 'present' typing
+                          if (raw.toLowerCase().startsWith("p")) {
+                            setValue(`education.${index}.endDate`, raw, { shouldValidate: false });
+                            return;
+                          }
+                          const digits = raw.replace(/\D/g, "").slice(0, 4);
+                          setValue(`education.${index}.endDate`, digits, { shouldValidate: true });
+                        },
+                      })}
                     />
+                    <FieldError message={err?.endDate?.message} />
                   </div>
                   <div className="col-span-2">
                     <label className={labelClass}>GPA (optional)</label>
